@@ -8,6 +8,10 @@ enable_testing()
 
 find_package(CURL REQUIRED)
 
+
+
 add_library(cdatasetLoader SHARED ./src/cdataset_loader.c)
 target_include_directories(cdatasetLoader PUBLIC ./include)
 target_link_libraries(cdatasetLoader PRIVATE CURL::libcurl)
+
+add_subdirectory(examples)
