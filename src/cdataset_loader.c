@@ -21,6 +21,65 @@ size_t write_file_callback(void *ptr, size_t size, size_t nmemb, void *stream) {
     return written;
 }
 
+// load batched img data
+void load_data(const char *filename, float *data, int size) {
+    int _[16];
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL) {
+        fprintf(stderr, "Error opening file: %s\n", filename);
+        exit(1);
+    }
+    // discard first 16 bytes
+    fread(_, 1, 16, file);
+    printf("data discared\n");
+    
+    char* tmp;
+    tmp = malloc(size+10);
+    size_t read_size = fread(tmp, 1, size, file);
+    
+    
+    printf("data loaded to bytes");
+    int i=0;
+    if (0) {
+    // if (read_size != size/10) {
+        // fprintf(stderr, "Error reading data: expected %d elements, got %zu\n", size, read_size);
+        exit(1);
+    }
+    for(i=0; i< size; i++) {
+        // printf("%d\n", i);
+        // data[i*sizeof(float)] = (float) tmp[i];
+        data[i] = (float) tmp[i];
+    }
+    fclose(file);
+    free(tmp);
+}
+
+// load batch labels
+void load_labels(const char *filename, int *labels, int size) {
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL) {
+        fprintf(stderr, "Error opening file: %s\n", filename);
+        exit(1);
+    }
+    int _[8];
+    // discard first 8 bytes
+    fread(_, 1, 8, file);
+    char* tmp;
+    tmp = malloc(size);
+    size_t read_size = fread(tmp, 1, size, file);
+    if (read_size != size) {
+        fprintf(stderr, "Error reading labels: expected %d elements, got %zu\n", size, read_size);
+        exit(1);
+    }
+    int i = 0;
+    for(i=0; i<size; i++) {
+        labels[i] = (int) tmp[i];
+    }
+    fclose(file);
+    free(tmp);
+}
+
+
 
 int _create_directory(const char *path) {
     // Attempt to create the directory
@@ -76,7 +135,7 @@ int _check_files_exists(const char* dir) {
 }
 
 // Function to download a single file
-int download_file(const char *url, const char *output_path) {
+int _download_file(const char *url, const char *output_path) {
     CURL *curl;
     CURLcode res;
 
@@ -117,7 +176,7 @@ int download_file(const char *url, const char *output_path) {
 }
 
 int _mnist_download(const char* dir) {
-    const char *base_url = "http://yann.lecun.com/exdb/mnist";
+    const char *base_url = "https://ossci-datasets.s3.amazonaws.com/mnist";
     const char *mnist_files[] = {
         "train-images-idx3-ubyte.gz",
         "train-labels-idx1-ubyte.gz",
